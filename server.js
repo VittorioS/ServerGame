@@ -2,7 +2,7 @@
 // This simple web server written in Node responds with "Hello World" for every request.
 //
 var http = require('http');
-// var express = require('express');
+var express = require('express');
 var util = require('util');
 var app_port = process.env.app_port || 8080;
 var app_host = process.env.app_host || '127.0.0.1';
