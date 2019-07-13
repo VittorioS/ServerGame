@@ -53,7 +53,7 @@ function setupAuthoritativePhaser() {
   }).then((dom) => {
     dom.window.gameLoaded = () => {
 	  dom.window.io = io;
-      server.listen(8081, function () {
+      server.listen(app_port, function () {
         console.log(`Listening on ${server.address().port}`);
       });
     };
@@ -72,4 +72,4 @@ function setupAuthoritativePhaser() {
   });
 }
  
-// setupAuthoritativePhaser();
+setupAuthoritativePhaser();
