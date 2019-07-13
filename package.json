@@ -2,6 +2,9 @@
   "name": "helloworld",
   "version": "0.0.1",
   "requires": true,
+  "engines": {
+    "node": "8.11.1"
+  },
   "dependencies": {
     "datauri": "^2.0.0",
     "express": "^4.17.1",
