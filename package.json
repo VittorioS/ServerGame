@@ -2,5 +2,9 @@
   "name": "helloworld",
   "version": "0.0.1",
   "requires": true,
-  "dependencies": {}
+  "dependencies": {
+    "datauri": "^2.0.0",
+    "express": "^4.17.1",
+    "jsdom": "^15.1.1"
+  }
 }
