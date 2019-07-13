@@ -1,26 +1,8 @@
-const players = {};
-var platforms = {};
-
-const config = {
+var config = {
 	type: Phaser.AUTO,
 	parent: 'phaser-example',
 	width: 800,
 	height: 600,
-	autoFocus: false,
-	physics: {
-		default: "arcade",
-		arcade: {
-			gravity: {
-				y: 300
-			},
-			debug: true
-		},
-		impact: {
-			gravity: 50,
-			maxVelocity: 800,
-			debug: false
-		}
-	},
 	scene: {
 		preload: preload,
 		create: create,
@@ -28,30 +10,12 @@ const config = {
 	}
 };
 
-function addPlayer(self, playerInfo) {
-	var player = self.physics.add.sprite(playerInfo.x, playerInfo.y, 'dude');
-
-	player.setBounce(1);
-	player.setCollideWorldBounds(true);
-	player.body.setGravityY(300); // Body
+function displayPlayers(self, playerInfo, sprite) {
+	const player = self.add.sprite(playerInfo.x, playerInfo.y, sprite);
+	if (playerInfo.team === 'blue') player.setTint(0x0000ff);
+	else player.setTint(0xff0000);
 	player.playerId = playerInfo.playerId;
 	self.players.add(player);
-}
-
-function removePlayer(self, playerId) {
-	self.players.getChildren().forEach((player) => {
-		if (playerId === player.playerId) {
-			player.destroy();
-		}
-	});
-}
-
-function handlePlayerInput(self, playerId, input) {
-	self.players.getChildren().forEach((player) => {
-		if (playerId === player.playerId) {
-			players[player.playerId].input = input;
-		}
-	});
 }
 
 function preload() {
@@ -65,119 +29,157 @@ function preload() {
 			frameHeight: 48
 		}
 	);
+	this.load.spritesheet('otherPlayer',
+		'assets/dude.png', {
+			frameWidth: 32,
+			frameHeight: 48
+		}
+	);
 }
-var player;
+var platforms;
+
 function create() {
-
-	const self = this;
-
+	var self = this;
+	this.socket = io();
 	/* PLATFORM - START*/
 	this.add.image(400, 300, 'sky');
 
-	platforms = this.physics.add.staticGroup();
+	platforms = this.add.group();
 
-	platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+	platforms.create(400, 568, 'ground').setScale(2);
 
 	platforms.create(600, 400, 'ground');
 	platforms.create(50, 250, 'ground');
 	platforms.create(750, 220, 'ground');
 	/* PLATFORM - END*/
-
 	
-	
-	this.players = this.physics.add.group();
-addPlayer(self, {
-rotation: 0,
-			x: 100,
-			y: 450,
-			playerId: "eqweqweqw",
-			team: (Math.floor(Math.random() * 2) == 0) ? 'red' : 'blue',
-			input: {
-				left: false,
-				right: false,
-				up: false
-			}
-});
+	/* PLAYER - START*/
+	this.players = this.add.group();
 
-	this.players.children.iterate(function (child) {
- 		child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+	 	this.anims.create({
+ 		key: 'left',
+ 		frames: this.anims.generateFrameNumbers('dude', {
+ 			start: 0,
+ 			end: 3
+ 		}),
+ 		frameRate: 10,
+ 		repeat: -1
+ 	});
+ 	
+ 	this.anims.create({
+ 		key: 'sprint_left',
+ 		frames: this.anims.generateFrameNumbers('dude', {
+ 			start: 0,
+ 			end: 3
+ 		}),
+ 		frameRate: 15,
+ 		repeat: -1
  	});
 
- // player = self.physics.add.sprite(100, 450, 'dude');
+ 	this.anims.create({
+ 		key: 'turn',
+ 		frames: [{
+ 			key: 'dude',
+ 			frame: 4
+ 		}],
+ 		frameRate: 20
+ 	});
 
-	// player.setBounce(1);
-	// player.setCollideWorldBounds(true);
-	// player.body.setGravityY(300); // Body
-	// player.playerId = playerInfo.playerId;
+ 	this.anims.create({
+ 		key: 'right',
+ 		frames: this.anims.generateFrameNumbers('dude', {
+ 			start: 5,
+ 			end: 8
+ 		}),
+ 		frameRate: 10,
+ 		repeat: -1
+ 	});
 
-	/* COLLIDER - START*/
-	// this.physics.add.collider(player, platforms);
-	this.physics.add.collider(this.players, platforms);
+ 	this.anims.create({
+ 		key: 'sprint_right',
+ 		frames: this.anims.generateFrameNumbers('dude', {
+ 			start: 5,
+ 			end: 8
+ 		}),
+ 		frameRate: 15,
+ 		repeat: -1
+ 	});
+	/* PLAYER - END*/
+	
+	this.cursors = this.input.keyboard.createCursorKeys();
+	this.leftKeyPressed = false;
+	this.rightKeyPressed = false;
+	this.upKeyPressed = false;
 
-	/* io.on('connection', function (socket) {
-		console.log('a user connected');
-
-		// create a new player and add it to our players object
-		players[socket.id] = {
-			rotation: 0,
-			x: 100,
-			y: 450,
-			playerId: socket.id,
-			team: (Math.floor(Math.random() * 2) == 0) ? 'red' : 'blue',
-			input: {
-				left: false,
-				right: false,
-				up: false
+	this.socket.on('currentPlayers', function (players) {
+		Object.keys(players).forEach(function (id) {
+			if (players[id].playerId === self.socket.id) {
+				displayPlayers(self, players[id], 'dude');
+			} else {
+				displayPlayers(self, players[id], 'otherPlayer');
 			}
-		};
-		// add player to server
-		addPlayer(self, players[socket.id]);
-		// send the players object to the new player
-		socket.emit('currentPlayers', players);
-		// update all other players of the new player
-		socket.broadcast.emit('newPlayer', players[socket.id]);
-
-		// when a player moves, update the player data
-		socket.on('playerInput', function (inputData) {
-			handlePlayerInput(self, socket.id, inputData);
 		});
+	});
 
-		socket.on('disconnect', function () {
-			console.log('user disconnected');
-			// remove player from server
-			removePlayer(self, socket.id);
-			// remove this player from our players object
-			delete players[socket.id];
-			// emit a message to all players to remove this player
-			io.emit('disconnect', socket.id);
+	this.socket.on('newPlayer', function (playerInfo) {
+		displayPlayers(self, playerInfo, 'otherPlayer');
+	});
+
+	this.socket.on('disconnect', function (playerId) {
+		var o = self.players.getChildren().find(function (player) {
+			return playerId === player.playerId;
 		});
-	}); */
+		if (o)
+			o.destroy();
+	});
+
+	this.socket.on('playerUpdates', function (players) {
+		Object.keys(players).forEach(function (id) {
+			self.players.getChildren().forEach(function (player) {
+				if (players[id].playerId === player.playerId) {
+					player.setRotation(players[id].rotation);
+					player.setPosition(players[id].x, players[id].y);
+					if (players[id].input.left) {
+						player.anims.play("left", true);
+					} else if (players[id].input.right) {
+						player.anims.play("right", true);
+					} else {
+						player.anims.play("turn", true);
+					}
+				}
+			});
+		});
+	});
 }
 
 function update() {
-	// this.players.getChildren().forEach((player) => {
-		// const input = players[player.playerId].input;
-		// if (input.left) {
-			// player.setVelocityX(-160);
-		// } else if (input.right) {
-			// player.setVelocityX(160);
-		// } else {
-			// player.setVelocityX(0);
-		// }
 
-		// if (input.up && player.body.touching.down) {
-			// player.setVelocityY(-490);
-		// }
+	const left = this.leftKeyPressed;
+	const right = this.rightKeyPressed;
+	const up = this.upKeyPressed;
 
-		// players[player.playerId].x = player.x;
-		// players[player.playerId].y = player.y;
-		// players[player.playerId].rotation = player.rotation;
-	// });
-	// this.physics.world.wrap(this.players, 5);
-	// io.emit('playerUpdates', players);
+	if (this.cursors.left.isDown) {
+		this.leftKeyPressed = true;
+	} else if (this.cursors.right.isDown) {
+		this.rightKeyPressed = true;
+	} else {
+		this.leftKeyPressed = false;
+		this.rightKeyPressed = false;
+	}
 
+	if (this.cursors.up.isDown) {
+		this.upKeyPressed = true;
+	} else {
+		this.upKeyPressed = false;
+	}
+
+	if (left !== this.leftKeyPressed || right !== this.rightKeyPressed || up !== this.upKeyPressed) {
+		this.socket.emit('playerInput', {
+			left: this.leftKeyPressed,
+			right: this.rightKeyPressed,
+			up: this.upKeyPressed
+		});
+	}
 }
 
 const game = new Phaser.Game(config);
-
-// window.gameLoaded();
