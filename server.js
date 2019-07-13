@@ -27,6 +27,8 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
+var app_port = process.env.app_port || 8080;
+var app_host = process.env.app_host || '127.0.0.1';
  
 app.use(express.static(__dirname + '/public'));
 // app.use('/resources', express.static(__dirname +'/resources'));
@@ -36,7 +38,7 @@ app.get('/', function (req, res) {
   res.sendFile(__dirname + '/authoritative_server/index.html');
 });
  
-server.listen(8080, function () {
+server.listen(app_port, function () {
   console.log(`Listening on ${server.address().port}`);
 });
 
