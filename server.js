@@ -10,7 +10,7 @@ var app_host = process.env.app_host || '127.0.0.1';
 http.createServer(function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.write('Hello World from Cloudnode\n\n');
-    console.log('Node version:' + process.versions);
+    console.log(process.versions);
     res.end();
 }).listen(app_port);
 console.log('Web server  running at http://' + app_host + ':' + app_port);
