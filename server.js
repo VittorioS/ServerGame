@@ -1,5 +1,5 @@
 
-This simple web server written in Node responds with "Hello World" for every request.
+// This simple web server written in Node responds with "Hello World" for every request.
 
 var http = require('http');
 var express = require('express');
