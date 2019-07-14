@@ -1,7 +1,7 @@
 
 // This simple web server written in Node responds with "Hello World" for every request.
 
-var http = require('canvas');
+// var http = require('canvas');
 var http = require('http');
 var express = require('express');
 var util = require('util');
