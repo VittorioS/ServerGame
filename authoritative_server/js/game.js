@@ -33,7 +33,7 @@ function addPlayer(self, playerInfo) {
 
 	player.setBounceY(1);
 	player.setCollideWorldBounds(true);
-	// player.body.setGravityY(300); // Body
+	player.body.setGravityY(300); // Body
 	player.playerId = playerInfo.playerId;
 	self.players.add(player);
 }
@@ -84,18 +84,7 @@ function create() {
 	/* PLATFORM - END*/
 
 	this.players = this.physics.add.group();
-addPlayer(self, {
-rotation: 0,
-			x: 100,
-			y: 450,
-			playerId: "eqweqweqw",
-			team: (Math.floor(Math.random() * 2) == 0) ? 'red' : 'blue',
-			input: {
-				left: false,
-				right: false,
-				up: false
-			}
-});
+
 	/* COLLIDER - START*/
 	this.physics.add.collider(this.players, platforms);
 
